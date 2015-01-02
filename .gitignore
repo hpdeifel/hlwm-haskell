@@ -1,2 +1,2 @@
-/XLibBindings.hs
 /dist/
+/src/Graphics/X11/Xlib/Herbst.hs

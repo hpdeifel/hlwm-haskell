@@ -1,4 +1,4 @@
-module XLibBindings where
+module Graphics.X11.Xlib.Herbst where
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -11,6 +11,9 @@ import System.Environment
 import Foreign
 import Foreign.C
 import Foreign.C.String
+
+-- FIXME Some functions shouldn't return IO () but IO Bool or something
+-- or throw an exception if the X-functions doesn't return success
 
 setClassHint :: Display -> Window -> ClassHint -> IO ()
 setClassHint d w ch = allocaBytes (#{size XClassHint}) $ \p ->
@@ -58,7 +61,10 @@ utf8TextPropertyToTextList d tp =
     xUtf8TextPropertyToTextList d tpPtr ptrPtr intPtr
     strArr <- peek ptrPtr
     num <- peek intPtr
-    return _
+    cstrs <- peekArray (fromIntegral num) strArr
+    strs <- mapM peekCString cstrs
+    freeStringList strArr
+    return strs
 
 foreign import ccall unsafe "X11/Xlib.h Xutf8TextPropertyToTextList"
   xUtf8TextPropertyToTextList :: Display -> Ptr TextProperty -> (Ptr (Ptr CString)) -> (Ptr CInt) -> IO ()
