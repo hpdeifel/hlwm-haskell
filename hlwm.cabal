@@ -25,3 +25,4 @@ executable herbstclient
   default-language:    Haskell2010
   other-modules:       Graphics.X11.Xlib.Herbst,
                        HLWM.Client.IPC
+  ghc-options:         -Wall
