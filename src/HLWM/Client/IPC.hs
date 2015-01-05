@@ -16,9 +16,6 @@ import Graphics.X11.Xlib.Extras
 import Graphics.X11.Xlib.Herbst
 import Control.Applicative
 import Foreign.C.String
-import System.Exit
-import System.Environment
-import Data.List
 import Data.Bits
 import Data.Maybe
 

@@ -5,12 +5,10 @@ module Graphics.X11.Xlib.Herbst where
 
 import Graphics.X11.Xlib.Extras
 import Graphics.X11.Xlib
-import Control.Applicative
 import System.Environment
 
 import Foreign
 import Foreign.C
-import Foreign.C.String
 
 -- FIXME Some functions shouldn't return IO () but IO Bool or something
 -- or throw an exception if the X-functions doesn't return success
