@@ -237,6 +237,8 @@ nextHook con = recvEvent con >>= \case
 --
 -- Connects to the herbstluftwm server, passes the connection on to the supplied
 -- action and closes the connection again after the action has finished.
+
+-- FIXME: Add exception safety
 withConnection :: (HerbstConnection -> IO a) -> IO (Maybe a)
 withConnection f = connect >>= \case
   Just con -> do
