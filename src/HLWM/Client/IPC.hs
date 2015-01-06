@@ -6,6 +6,7 @@ module HLWM.Client.IPC
        , disconnect
        , withConnection
        , recvEvent
+       , HerbstEvent(..)
        , asyncSendCommand
        , sendCommand
        , nextHook
