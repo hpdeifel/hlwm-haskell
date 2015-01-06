@@ -89,7 +89,7 @@ connect = do
 
   clientWin <- createClientWindow display root
   findHookWindow display root >>= \case
-    Just hooksWin -> return $ Just $ HerbstConnection {..}
+    Just hooksWin -> flush display >> (return $ Just $ HerbstConnection {..})
     Nothing -> return Nothing -- FIXME deinitialize
 
 
