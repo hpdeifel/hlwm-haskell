@@ -16,7 +16,7 @@ build-type:          Simple
 cabal-version:       >=1.10
 
 
-executable herbstclient
+executable hherbstclient
   main-is:             HLWM/Client/Main.hs
   hs-source-dirs:      src
   other-extensions:    RecordWildCards, LambdaCase, MultiWayIf, TupleSections
