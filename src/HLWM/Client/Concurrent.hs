@@ -1,4 +1,4 @@
-{-# LANGUAGE LambdaCase, RecordWildCards #-}
+{-# LANGUAGE LambdaCase, RecordWildCards, ScopedTypeVariables #-}
 
 -- | A concurrent client implementation of the
 -- <http://herbstluftwm.org herbstluftwm>window manager.
@@ -30,10 +30,12 @@ module HLWM.Client.Concurrent
 
 import HLWM.Client.IPC (HerbstEvent(..))
 import qualified HLWM.Client.IPC as IPC
+import qualified HLWM.Client.Connection as Con
 
 import Control.Concurrent.STM
 import Control.Concurrent
 import Control.Monad
+import Control.Applicative
 import Data.Maybe
 
 -- | Opaque type representing the connection to the herbstluftwm server
@@ -43,7 +45,7 @@ data HerbstConnection = HerbstConnection {
   connection :: IPC.HerbstConnection,
   commandLock :: Lock,
   eventChan :: TChan HerbstEvent,
-  eventThreadId :: ThreadId
+  controlChan :: TChan Message
 }
 
 -- | Connect to the herbstluftwm server.
@@ -58,7 +60,8 @@ connect = IPC.connect >>= \case
   Just connection -> do
     commandLock <- newEmptyTMVarIO
     eventChan <- newBroadcastTChanIO
-    eventThreadId <- forkIO $ eventThread connection eventChan
+    controlChan <- newTChanIO
+    void $ forkIO $ xThread connection eventChan controlChan
     return $ Just $ HerbstConnection {..}
 
 -- | Close connection to the herbstluftwm server.
@@ -71,8 +74,9 @@ connect = IPC.connect >>= \case
 -- FIXME Get killThread to work, even if it blocks in recvEvent
 disconnect :: HerbstConnection -> IO ()
 disconnect HerbstConnection{..} = do
-  atomically $ lock commandLock
-  killThread eventThreadId
+  atomically $ do
+    lock commandLock
+    writeTChan controlChan Die
   IPC.disconnect connection
 
 -- | Execute an action with a newly established 'HerbstConnection'.
@@ -99,8 +103,8 @@ sendCommand :: HerbstConnection -> [String] -> IO (Int, String)
 sendCommand client args = do
   events <- atomically $ do
     lock (commandLock client)
-    dupTChan (eventChan client)
-  IPC.asyncSendCommand (connection client) args
+    dupTChan (eventChan client) <*
+      writeTChan (controlChan client) (HerbstCmd args)
   res <- readBoth events Nothing Nothing
   atomically $ unlock (commandLock client)
   return res
@@ -125,10 +129,23 @@ nextHook client = do
 
   loop
 
-eventThread :: IPC.HerbstConnection -> TChan HerbstEvent -> IO ()
-eventThread con chan = forever $ do
-  ev <- IPC.recvEvent con
-  atomically $ writeTChan chan ev
+data Message = HerbstCmd [String]
+             | Die
+
+xThread :: IPC.HerbstConnection -> TChan HerbstEvent -> TChan Message -> IO ()
+xThread con events msgs = do
+  (waitForFd, disconnectFd) <- threadWaitReadSTM (Con.connectionFd con)
+
+  let loop = disconnectFd >> xThread con events msgs
+
+  atomically ((Just <$> readTChan msgs) `orElse` (waitForFd >> return Nothing)) >>= \case
+    Just Die -> disconnectFd
+    Just (HerbstCmd args) -> IPC.asyncSendCommand con args >> loop
+    Nothing ->
+      let loop2 = IPC.tryRecvEvent con >>= \case
+            Just ev -> atomically (writeTChan events ev) >> loop2
+            Nothing -> loop
+      in loop2
 
 type Lock = TMVar ()
 
