@@ -45,7 +45,8 @@ data HerbstConnection = HerbstConnection {
   connection :: IPC.HerbstConnection,
   commandLock :: Lock,
   eventChan :: TChan HerbstEvent,
-  controlChan :: TChan Message
+  controlChan :: TChan Message,
+  dieVar :: TMVar ()
 }
 
 -- | Connect to the herbstluftwm server.
@@ -61,22 +62,20 @@ connect = IPC.connect >>= \case
     commandLock <- newEmptyTMVarIO
     eventChan <- newBroadcastTChanIO
     controlChan <- newTChanIO
-    void $ forkIO $ xThread connection eventChan controlChan
+    dieVar <- newEmptyTMVarIO
+    void $ forkIO $ xThread connection eventChan controlChan dieVar
     return $ Just $ HerbstConnection {..}
 
 -- | Close connection to the herbstluftwm server.
 --
 -- After calling this function, the 'HerbstConnection' is no longer valid and
 -- must not be used anymore.
---
--- __Bug:__ Currently blocks until another event is received.
-
--- FIXME Get killThread to work, even if it blocks in recvEvent
 disconnect :: HerbstConnection -> IO ()
 disconnect HerbstConnection{..} = do
   atomically $ do
     lock commandLock
     writeTChan controlChan Die
+  atomically $ takeTMVar dieVar
   IPC.disconnect connection
 
 -- | Execute an action with a newly established 'HerbstConnection'.
@@ -132,14 +131,17 @@ nextHook client = do
 data Message = HerbstCmd [String]
              | Die
 
-xThread :: IPC.HerbstConnection -> TChan HerbstEvent -> TChan Message -> IO ()
-xThread con events msgs = do
+xThread :: IPC.HerbstConnection -> TChan HerbstEvent -> TChan Message
+        -> TMVar () -> IO ()
+xThread con events msgs dieVar = do
   (waitForFd, disconnectFd) <- threadWaitReadSTM (Con.connectionFd con)
 
-  let loop = disconnectFd >> xThread con events msgs
+  let loop = disconnectFd >> xThread con events msgs dieVar
 
   atomically ((Just <$> readTChan msgs) `orElse` (waitForFd >> return Nothing)) >>= \case
-    Just Die -> disconnectFd
+    Just Die -> do
+      disconnectFd
+      atomically $ putTMVar dieVar () -- notify caller that we died
     Just (HerbstCmd args) -> IPC.asyncSendCommand con args >> loop
     Nothing ->
       let loop2 = IPC.tryRecvEvent con >>= \case
