@@ -90,7 +90,10 @@ connect = do
   clientWin <- createClientWindow display root
   findHookWindow display root >>= \case
     Just hooksWin -> flush display >> (return $ Just $ HerbstConnection {..})
-    Nothing -> return Nothing -- FIXME deinitialize
+    Nothing -> do
+      destroyClientWindow display clientWin
+      closeDisplay display
+      return Nothing
 
 
 -- | Close connection to the herbstluftwm server.
@@ -99,7 +102,7 @@ connect = do
 -- must not be used anymore.
 disconnect :: HerbstConnection -> IO ()
 disconnect con = do
-  destroyClientWindow con
+  destroyClientWindow (display con) (clientWin con)
   closeDisplay (display con)
 
 createClientWindow :: Display -> Window -> IO Window
@@ -117,8 +120,8 @@ createClientWindow display root = do
 
   return win
 
-destroyClientWindow :: HerbstConnection -> IO ()
-destroyClientWindow con = destroyWindow (display con) (clientWin con)
+destroyClientWindow :: Display -> Window -> IO ()
+destroyClientWindow d win = destroyWindow d win
 
 findHookWindow :: Display -> Window -> IO (Maybe Window)
 findHookWindow display root = do
