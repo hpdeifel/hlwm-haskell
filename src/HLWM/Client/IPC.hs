@@ -56,6 +56,7 @@ import Control.Applicative
 import Foreign.C.String
 import Data.Bits
 import Data.Maybe
+import Control.Exception
 
 import HLWM.Client.Connection
 
@@ -86,6 +87,7 @@ connect = do
   atomArgs <- internAtom display herbstIPCArgsAtom False
   atomOutput <- internAtom display herbstIPCOutputAtom False
   atomStatus <- internAtom display herbstIPCStatusAtom False
+
 
   clientWin <- createClientWindow display root
   findHookWindow display root >>= \case
@@ -129,9 +131,9 @@ findHookWindow display root = do
   getWindowProperty32 display atom root >>= \case
     Just (winid:_) -> do
       let win = fromIntegral winid
-          mask = structureNotifyMask .|. propertyChangeMask
+          inputMask = structureNotifyMask .|. propertyChangeMask
 
-      selectInput display win mask
+      selectInput display win inputMask
 
       return $ Just win
     _ -> return Nothing
@@ -238,12 +240,7 @@ nextHook con = recvEvent con >>= \case
 --
 -- Connects to the herbstluftwm server, passes the connection on to the supplied
 -- action and closes the connection again after the action has finished.
-
--- FIXME: Add exception safety
 withConnection :: (HerbstConnection -> IO a) -> IO (Maybe a)
-withConnection f = connect >>= \case
-  Just con -> do
-    res <- f con
-    disconnect con
-    return $ Just res
-  Nothing -> return Nothing
+withConnection f =
+  bracket connect (maybe (return ()) disconnect)
+                  (maybe (return Nothing) (fmap Just . f))

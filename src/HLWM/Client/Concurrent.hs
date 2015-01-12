@@ -37,6 +37,7 @@ import Control.Concurrent
 import Control.Monad
 import Control.Applicative
 import Data.Maybe
+import Control.Exception
 
 -- | Opaque type representing the connection to the herbstluftwm server
 --
@@ -85,12 +86,9 @@ disconnect HerbstConnection{..} = do
 
 -- FIXME: Add exception safety
 withConnection :: (HerbstConnection -> IO a) -> IO (Maybe a)
-withConnection f = connect >>= \case
-  Just con -> do
-    res <- f con
-    disconnect con
-    return $ Just res
-  Nothing -> return Nothing
+withConnection f = 
+  bracket connect (maybe (return ()) disconnect)
+                  (maybe (return Nothing) (fmap Just . f))
 
 -- | Execute a command in the herbstluftwm server.
 --
