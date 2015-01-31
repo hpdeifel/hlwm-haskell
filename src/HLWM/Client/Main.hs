@@ -3,58 +3,55 @@ module Main where
 
 import HLWM.Client.Concurrent
 import System.Console.GetOpt
-import Control.Lens
 import Data.List
 import System.Environment
 import System.Exit
 import System.IO
 
 data HCOptions = HCOpt {
-  _newline :: Bool,
-  _print0  :: Bool,
-  _lastArg :: Bool,
-  _idle    :: Bool,
-  _wait    :: Bool,
-  _count   :: Int,
-  _quiet   :: Bool,
-  _version :: Bool,
-  _help    :: Bool
+  newline :: Bool,
+  print0  :: Bool,
+  lastArg :: Bool,
+  idle    :: Bool,
+  wait    :: Bool,
+  count   :: Int,
+  quiet   :: Bool,
+  version :: Bool,
+  help    :: Bool
 }
-makeLenses ''HCOptions
 
 defOpts :: HCOptions
 defOpts = HCOpt {
-  _newline  = True,
-  _print0   = False,
-  _lastArg  = False,
-  _idle     = False,
-  _wait     = False,
-  _count    = 1,
-  _quiet    = False,
-  _version  = False,
-  _help     = False
+  newline  = True,
+  print0   = False,
+  lastArg  = False,
+  idle     = False,
+  wait     = False,
+  count    = 1,
+  quiet    = False,
+  version  = False,
+  help     = False
 }
 
 options :: [OptDescr (HCOptions -> HCOptions)]
 options =
-  [ Option ['n'] ["no-newline"] (NoArg $ set newline False)
-           "Do not print a newline if output does not end with a newline."
-  , Option ['0'] ["print0"] (NoArg $ set print0 True)
-           "Use the null character as delimiter between the output of hooks."
-  , Option ['l'] ["last-arg"] (NoArg $ set lastArg True)
-           "Print only the last argument of a hook."
-  , Option ['i'] ["idle"] (NoArg $ set idle True)
-           "Wait for hooks instead of executing commands."
-  , Option ['w'] ["wait"] (NoArg $ set wait True)
-           "Same as --idle but exit after first --count hooks."
-  , Option ['c'] ["count"] (ReqArg (set count . read) "COUNT")
-           "Let --wait exit after COUNT hooks were received and printed. The default of COUNT is 1."
-  , Option ['q'] ["quiet"] (NoArg $ set quiet True)
-           "Do not print error messages if herbstclient cannot connect to the running herbstluftwm instance."
-  , Option ['v'] ["version"] (NoArg $ set version True)
-           "Print the herbstclient version. To get the herbstluftwm version, use 'herbstclient version'."
-  , Option ['h'] ["help"] (NoArg $ set wait True)
-           "Print this help."
+  [ Option ['n'] ["no-newline"] (NoArg $ \o -> o { newline = False })
+    "Do not print a newline if output does not end with a newline."
+  , Option ['0'] ["print0"] (NoArg $ \o -> o { print0 = True })
+    "Use the null character as delimiter between the output of hooks."
+  , Option ['l'] ["last-arg"] (NoArg $ \o -> o { lastArg = True })
+    "Print only the last argument of a hook."
+  , Option ['i'] ["idle"] (NoArg $ \o -> o { idle = True })
+    "Wait for hooks instead of executing commands."
+  , Option ['w'] ["wait"] (NoArg $ \o -> o { wait = True })
+    "Same as --idle but exit after first --count hooks."
+  , Option ['c'] ["count"] (ReqArg (\a o -> o { count = read a }) "COUNT")
+    "Let --wait exit after COUNT hooks were received and printed. The default of COUNT is 1."
+  , Option ['q'] ["quiet"] (NoArg $ \o -> o { quiet = True })
+    "Do not print error messages if herbstclient cannot connect to the running herbstluftwm instance."
+  , Option ['v'] ["version"] (NoArg $ \o -> o { version = True })
+    "Print the herbstclient version. To get the herbstluftwm version, use 'herbstclient version'."
+  , Option ['h'] ["help"] (NoArg $ \o -> o { wait = True }) "Print this help."
   ]
 
 usage :: String -> String
@@ -124,11 +121,11 @@ main :: IO ()
 main = do
   name <- getProgName
   (opts, args) <- getArgs >>= hcOpts
-  if | opts^.help -> putStr $ helpString name
-     | opts^.version -> putStrLn "A friendly haskell implementation of herbstclient"
-     | opts^.idle -> waitForHooks Infinite (Null (opts^.print0))
-                                  (Quiet (opts^.quiet)) (LastArg (opts^.lastArg))
-     | opts^.wait -> waitForHooks (Wait (opts^.count)) (Null (opts^.print0))
-                                  (Quiet (opts^.quiet)) (LastArg (opts^.lastArg))
-     | otherwise  -> send args (NL (opts^.newline)) (Quiet (opts^.quiet))
+  if | help opts -> putStr $ helpString name
+     | version opts -> putStrLn "A friendly haskell implementation of herbstclient"
+     | idle opts -> waitForHooks Infinite (Null (print0 opts))
+                                  (Quiet (quiet opts)) (LastArg (lastArg opts))
+     | wait opts -> waitForHooks (Wait (count opts)) (Null (print0 opts))
+                                  (Quiet (quiet opts)) (LastArg (lastArg opts))
+     | otherwise  -> send args (NL (newline opts)) (Quiet (quiet opts))
                      >>= exitWith
