@@ -53,7 +53,7 @@ options =
     "Do not print error messages if herbstclient cannot connect to the running herbstluftwm instance."
   , Option ['v'] ["version"] (NoArg $ \o -> o { version = True })
     "Print the herbstclient version. To get the herbstluftwm version, use 'herbstclient version'."
-  , Option ['h'] ["help"] (NoArg $ \o -> o { wait = True }) "Print this help."
+  , Option ['h'] ["help"] (NoArg $ \o -> o { help = True }) "Print this help."
   ]
 
 usage :: String -> String
