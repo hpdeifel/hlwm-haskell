@@ -1,6 +1,7 @@
 name:                hlwm
 version:             0.1.0.0
 synopsis:            Bindings to the herbstluftwm window manager
+description:         A client-side IPC implementation for herbstluftwm.
 license:             BSD2
 license-file:        LICENSE
 author:              Hans-Peter Deifel
