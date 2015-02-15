@@ -1,14 +1,27 @@
 {-# LANGUAGE LambdaCase, RecordWildCards, ScopedTypeVariables #-}
 
--- | A concurrent client implementation of the
--- <http://herbstluftwm.org herbstluftwm>window manager.
+-- | An IPC client implementation for the <http://herbstluftwm.org herbstluftwm>
+-- window manager.
 --
--- See "HLWM.Client.IPC" for details and examples. This module removes the
--- restriction that nextHook and sendCommand can't be called concurrently.
+-- See <http://herbstluftwm.org/herbstluftwm.html herbstluftwm(1)> and
+-- <http://herbstluftwm.org/herbstclient.html herbstclient(1)> for what this is
+-- all about.
 --
--- Note that the low-level event handling API from "HLWM.Client.IPC" is not
--- exported here, because it is not needed. Use haskell's built-in concurrency
--- features instead. For example, an asynchronous command can be sent with:
+-- == Examples
+-- Sending a command to herbstluftwm:
+--
+-- >>> withConnection (\con -> sendCommand con ["echo", "foo"])
+-- Just (0,"foo\n")
+--
+-- Printing 2 hooks:
+--
+-- >>> withConnection (\con -> replicateM_ 2 $ unwords <$> nextHook con >>= putStrLn)
+-- focus_changed 0x340004c IPC.hs - emacs
+-- focus_changed 0x3200073 ROXTerm
+-- Just ()
+--
+-- Although 'sendCommand' is synchronous, you can use it with forkIO or the
+-- <http://hackage.haskell.org/package/async async> library:
 --
 -- > withConnection $ \con -> do
 -- >   var <- newEmptyMVar

@@ -1,24 +1,8 @@
 {-# LANGUAGE RecordWildCards, LambdaCase, MultiWayIf, TupleSections, BangPatterns, ScopedTypeVariables, Rank2Types #-}
 
--- | A client implementation of the <http://herbstluftwm.org herbstluftwm>
--- window manager.
+-- | Internal herbluftwm IPC implementation
 --
--- See <http://herbstluftwm.org/herbstluftwm.html herbstluftwm(1)> and
--- <http://herbstluftwm.org/herbstclient.html herbstclient(1)> for what this is
--- all about.
---
--- == Examples
--- Sending a command to herbstluftwm:
---
--- >>> withConnection (\con -> sendCommand con ["echo", "foo"])
--- Just (0,"foo\n")
---
--- Printing 2 hooks:
---
--- >>> withConnection (\con -> replicateM_ 2 $ unwords <$> nextHook con >>= putStrLn)
--- focus_changed 0x340004c IPC.hs - emacs
--- focus_changed 0x3200073 ROXTerm
--- Just ()
+-- This is an internal module. Use only with extreme caution.
 --
 -- == On event handling
 --
@@ -30,7 +14,7 @@
 -- threads. Also, when calling 'asyncSendCommand' and then 'nextHook', the
 -- output of the command will likely be thrown away.
 --
--- See "HLWM.Client.Concurrent" for an interface that allows concurrent calling
+-- See "HLWM.IPC" for an interface that allows concurrent calling
 -- of 'nextHook' and 'sendCommand'.
 
 module HLWM.IPC.Internal
