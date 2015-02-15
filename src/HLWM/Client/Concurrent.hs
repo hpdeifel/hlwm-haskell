@@ -83,10 +83,8 @@ disconnect HerbstConnection{..} = do
 --
 -- Connects to the herbstluftwm server, passes the connection on to the supplied
 -- action and closes the connection again after the action has finished.
-
--- FIXME: Add exception safety
 withConnection :: (HerbstConnection -> IO a) -> IO (Maybe a)
-withConnection f = 
+withConnection f =
   bracket connect (maybe (return ()) disconnect)
                   (maybe (return Nothing) (fmap Just . f))
 
