@@ -33,9 +33,9 @@
 -- See "HLWM.Client.Concurrent" for an interface that allows concurrent calling
 -- of 'nextHook' and 'sendCommand'.
 
-module HLWM.Client.IPC
+module HLWM.IPC.Internal
        ( -- * Connection
-         HerbstConnection
+         HerbstConnection(..)
        , connect
        , disconnect
        , withConnection
@@ -58,7 +58,18 @@ import Data.Bits
 import Data.Maybe
 import Control.Exception
 
-import HLWM.Client.Connection
+-- | Opaque type representing the connection to the herbstluftwm server
+--
+-- See 'connect' and 'disconnect'.
+data HerbstConnection = HerbstConnection {
+  display :: Display,
+  atomArgs :: Atom,
+  atomOutput :: Atom,
+  atomStatus :: Atom,
+  root :: Window,
+  hooksWin :: Window,
+  clientWin :: Window
+}
 
 herbstIPCArgsAtom :: String
 herbstIPCArgsAtom = "_HERBST_IPC_ARGS"

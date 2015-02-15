@@ -17,7 +17,7 @@
 -- >   -- finally read output
 -- >   output <- takeMVar var
 
-module HLWM.Client.Concurrent
+module HLWM.IPC
        ( -- * Connection
          HerbstConnection
        , connect
@@ -28,9 +28,8 @@ module HLWM.Client.Concurrent
        , nextHook
        ) where
 
-import HLWM.Client.IPC (HerbstEvent(..))
-import qualified HLWM.Client.IPC as IPC
-import qualified HLWM.Client.Connection as Con
+import HLWM.IPC.Internal (HerbstEvent(..))
+import qualified HLWM.IPC.Internal as IPC
 
 import Control.Concurrent.STM
 import Control.Concurrent
@@ -38,6 +37,8 @@ import Control.Monad
 import Control.Applicative
 import Data.Maybe
 import Control.Exception
+import System.Posix.Types (Fd(..))
+import Graphics.X11.Xlib
 
 -- | Opaque type representing the connection to the herbstluftwm server
 --
@@ -130,7 +131,7 @@ data Message = HerbstCmd [String]
 xThread :: IPC.HerbstConnection -> TChan HerbstEvent -> TChan Message
         -> TMVar () -> IO ()
 xThread con events msgs dieVar = do
-  (waitForFd, disconnectFd) <- threadWaitReadSTM (Con.connectionFd con)
+  (waitForFd, disconnectFd) <- threadWaitReadSTM (connectionFd con)
 
   let loop = disconnectFd >> xThread con events msgs dieVar
 
@@ -152,3 +153,6 @@ lock l = putTMVar l ()
 
 unlock :: TMVar () -> STM ()
 unlock l = takeTMVar l >> return ()
+
+connectionFd :: IPC.HerbstConnection -> Fd
+connectionFd = Fd . connectionNumber . IPC.display

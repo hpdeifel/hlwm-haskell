@@ -1,7 +1,7 @@
 {-# LANGUAGE LambdaCase,TemplateHaskell, MultiWayIf #-}
 module Main where
 
-import HLWM.Client.Concurrent
+import HLWM.IPC
 import System.Console.GetOpt
 import Data.List
 import System.Environment
