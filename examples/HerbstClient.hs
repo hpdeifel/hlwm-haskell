@@ -1,4 +1,6 @@
 {-# LANGUAGE LambdaCase,TemplateHaskell, MultiWayIf #-}
+
+-- | A complete re-implementation of the official herbstclient program
 module Main where
 
 import HLWM.IPC

@@ -13,18 +13,9 @@ source-repository head
   type:               git
   location:           https://git.cs.fau.de/?p=lu03pevi/hlwm-haskell
 
-executable hherbstclient
-  main-is:             HLWM/Client/Main.hs
-  hs-source-dirs:      src
-  other-extensions:    RecordWildCards, LambdaCase, MultiWayIf, TupleSections
-  build-depends:       base >=4.7 && <4.8, X11 >=1.6 && <1.7, transformers, monads-tf, lens, stm,
-                       unix
-  build-tools:         hsc2hs
-  default-language:    Haskell2010
-  other-modules:       Graphics.X11.Xlib.Herbst,
-                       HLWM.IPC,
-                       HLWM.IPC.Internal
-  ghc-options:         -Wall
+flag examples
+  description:         Build example programs
+  default:             False
 
 library
   hs-source-dirs:      src
@@ -37,3 +28,15 @@ library
                        HLWM.IPC.Internal
   other-modules:       Graphics.X11.Xlib.Herbst
   ghc-options:         -Wall
+
+executable hherbstclient
+  hs-source-dirs:      examples
+  main-is:             HerbstClient.hs
+  other-extensions:    RecordWildCards, LambdaCase, MultiWayIf, TupleSections
+  build-depends:       base >=4.7 && <4.8, X11 >=1.6 && <1.7, transformers, monads-tf, lens, stm,
+                       unix, hlwm
+  build-tools:         hsc2hs
+  default-language:    Haskell2010
+  ghc-options:         -Wall -threaded
+  if !flag(examples)
+    buildable: False
