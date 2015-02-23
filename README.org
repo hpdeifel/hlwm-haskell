@@ -1,0 +1,9 @@
+* hlwm-haskell
+
+  An IPC client implementation for the [[http://herbstluftwm.org][herbstluftwm]] window manager.
+
+* Installation
+
+  ~hlwm~ is available on [[https://hackage.haskell.org/package/hlwm][hackage]]. Install it using ~cabal-install~:
+
+  : cabal install hlwm
