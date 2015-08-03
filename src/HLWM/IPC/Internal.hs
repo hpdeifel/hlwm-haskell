@@ -1,4 +1,4 @@
-{-# LANGUAGE RecordWildCards, LambdaCase, MultiWayIf, TupleSections, BangPatterns, ScopedTypeVariables, Rank2Types #-}
+{-# LANGUAGE RecordWildCards, LambdaCase, MultiWayIf, TupleSections, BangPatterns, ScopedTypeVariables, Rank2Types, CPP #-}
 
 -- | Internal herbluftwm IPC implementation
 --
@@ -36,7 +36,9 @@ module HLWM.IPC.Internal
 import Graphics.X11.Xlib
 import Graphics.X11.Xlib.Extras
 import Graphics.X11.Xlib.Herbst
+#if __GLASGOW_HASKELL__ < 710
 import Control.Applicative
+#endif
 import Foreign.C.String
 import Data.Bits
 import Data.Maybe
