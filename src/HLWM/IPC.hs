@@ -47,7 +47,6 @@ import qualified HLWM.IPC.Internal as IPC
 import Control.Concurrent.STM
 import Control.Concurrent
 import Control.Monad
-import Control.Applicative
 import Data.Maybe
 import Control.Exception
 import System.Posix.Types (Fd(..))
