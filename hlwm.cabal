@@ -21,7 +21,7 @@ flag examples
 library
   hs-source-dirs:      src
   other-extensions:    RecordWildCards, LambdaCase, MultiWayIf, TupleSections
-  build-depends:       base >=4.7 && <4.9
+  build-depends:       base >=4.7 && <4.10
                      , X11 >=1.6 && <1.7
                      , transformers
                      , stm
@@ -37,7 +37,7 @@ executable hherbstclient
   hs-source-dirs:      examples
   main-is:             HerbstClient.hs
   other-extensions:    RecordWildCards, LambdaCase, MultiWayIf, TupleSections
-  build-depends:       base >=4.7 && <4.9
+  build-depends:       base >=4.7 && <4.10
                      , X11 >=1.6 && <1.7
                      , transformers
                      , stm
